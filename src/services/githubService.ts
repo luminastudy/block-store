@@ -34,7 +34,7 @@ async function fetchConfigFile(
     }
   }
 
-  throw new Error('Neither lumina.json nor lumin.json found in repository')
+  throw new Error('lumina.json not found in repository')
 }
 
 /**
@@ -108,8 +108,8 @@ export async function fetchLuminaJsonFromGitHub(
 
     const defaultBranch = repoData.default_branch
 
-    // Try fetching lumina.json first, then fall back to lumin.json
-    const filenames = ['lumina.json', 'lumin.json']
+    // Try fetching lumina.json
+    const filenames = ['lumina.json']
     const { data, filename } = await fetchConfigFile(
       octokit,
       organization,
