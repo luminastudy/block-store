@@ -1,19 +1,21 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { configureStore } from '@reduxjs/toolkit'
-import type { BlockStoreState, LuminaJsonSource } from '../types.js'
-import luminaJsonReducer, {
+import type { BlockStoreState } from '../types/BlockStoreState.js'
+import type { LuminaJsonSource } from '../types/LuminaJsonSource.js'
+import luminaJsonReducer from '../slices/luminaJsonReducer.js'
+import {
   removeLuminaJson,
   clearSources,
   clearError,
-  selectAllSources,
-  selectSourceByKey,
-  selectSourcesByProvider,
-  selectAllBlocks,
-  selectBlocksFromSource,
-  selectBlockById,
-  selectLoading,
-  selectError,
-} from './luminaJsonSlice.js'
+} from '../slices/actions.js'
+import { selectAllSources } from '../slices/selectors/selectAllSources.js'
+import { selectSourceByKey } from '../slices/selectors/selectSourceByKey.js'
+import { selectSourcesByProvider } from '../slices/selectors/selectSourcesByProvider.js'
+import { selectAllBlocks } from '../slices/selectors/selectAllBlocks.js'
+import { selectBlocksFromSource } from '../slices/selectors/selectBlocksFromSource.js'
+import { selectBlockById } from '../slices/selectors/selectBlockById.js'
+import { selectLoading } from '../slices/selectors/selectLoading.js'
+import { selectError } from '../slices/selectors/selectError.js'
 
 describe('luminaJsonSlice', () => {
   let store: ReturnType<typeof configureStore>
@@ -274,8 +276,10 @@ describe('luminaJsonSlice', () => {
 
       const block = selectBlockById('block-2')(state)
       expect(block).toBeDefined()
-      expect(block?.id).toBe('block-2')
-      expect(block?.title.en_text).toBe('Block 2')
+      if (block) {
+        expect(block.id).toBe('block-2')
+        expect(block.title.en_text).toBe('Block 2')
+      }
     })
 
     it('selectBlockById should return undefined for non-existent block', () => {

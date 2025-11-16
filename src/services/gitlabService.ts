@@ -3,7 +3,10 @@
  */
 
 import { Gitlab } from '@gitbeaker/rest'
-import type { LuminaJson, GitProviderError } from '../types.js'
+import type { LuminaJson } from '../types/LuminaJson.js'
+import { GitProviderError } from '../errors/GitProviderError.js'
+import { ValidationError } from '../errors/ValidationError.js'
+import { NotFoundError } from '../errors/NotFoundError.js'
 
 /**
  * Fetches lumina.json from a GitLab repository
@@ -38,16 +41,22 @@ export async function fetchLuminaJsonFromGitLab(
       'HEAD'
     )
 
-    // Decode the base64 content
     const content = Buffer.from(file.content, 'base64').toString('utf-8')
-    const luminaJson = JSON.parse(content) as LuminaJson
+    const parsedContent = JSON.parse(content)
 
-    // Validate that it has the blocks array
-    if (!luminaJson.blocks || !Array.isArray(luminaJson.blocks)) {
-      throw new Error(
+    const isValidLuminaJson =
+      parsedContent &&
+      typeof parsedContent === 'object' &&
+      'blocks' in parsedContent &&
+      Array.isArray(parsedContent.blocks)
+
+    if (!isValidLuminaJson) {
+      throw new ValidationError(
         'Invalid lumina.json format: missing or invalid blocks array'
       )
     }
+
+    const luminaJson: LuminaJson = parsedContent
 
     // Get the latest commit for this file
     const commits = await gitlab.Commits.all(projectId, {
@@ -56,23 +65,38 @@ export async function fetchLuminaJsonFromGitLab(
     })
 
     if (commits.length === 0) {
-      throw new Error('No commits found for lumina.json')
+      throw new NotFoundError('No commits found for lumina.json')
     }
 
-    const commitSha = commits[0].id
+    const firstCommit = commits[0]
+    const commitSha = firstCommit ? firstCommit.id : ''
+    if (!commitSha) {
+      throw new NotFoundError('Commit has no ID')
+    }
 
     return { luminaJson, commitSha }
   } catch (error) {
-    const gitError: GitProviderError = {
-      message:
-        error instanceof Error
-          ? error.message
-          : 'Unknown error fetching from GitLab',
-      status: (error as { response?: { status?: number } }).response?.status,
+    const message =
+      error instanceof Error
+        ? error.message
+        : 'Unknown error fetching from GitLab'
+
+    let status: number | undefined
+    if (
+      error &&
+      typeof error === 'object' &&
+      'response' in error &&
+      error.response &&
+      typeof error.response === 'object' &&
+      'status' in error.response &&
+      typeof error.response.status === 'number'
+    ) {
+      status = error.response.status
     }
 
-    throw new Error(
-      `Failed to fetch lumina.json from GitLab (${organization}/${repository}): ${gitError.message}`
+    throw new GitProviderError(
+      `Failed to fetch lumina.json from GitLab (${organization}/${repository}): ${message}`,
+      status
     )
   }
 }

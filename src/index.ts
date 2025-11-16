@@ -5,43 +5,35 @@
  * Block types are defined by @lumina-study/block-schema (single source of truth).
  */
 
-// Export store factory and types
-export { createBlockStore } from './store.js'
-export type { BlockStore, RootState, AppDispatch } from './store.js'
+export { createBlockStore } from './store/createBlockStore.js'
+export type { BlockStore } from './store/BlockStore.js'
+export type { RootState } from './store/RootState.js'
+export type { AppDispatch } from './store/AppDispatch.js'
 
-// Export slice actions, selectors, and reducer
-export {
-  addLuminaJson,
-  removeLuminaJson,
-  clearSources,
-  clearError,
-  selectAllSources,
-  selectSourceByKey,
-  selectSourcesByProvider,
-  selectAllBlocks,
-  selectBlocksFromSource,
-  selectBlockById,
-  selectLoading,
-  selectError,
-  default as luminaJsonReducer,
-} from './slices/luminaJsonSlice.js'
+export { addLuminaJson } from './slices/addLuminaJson.js'
+export { removeLuminaJson, clearSources, clearError } from './slices/actions.js'
+export { default as luminaJsonReducer } from './slices/luminaJsonReducer.js'
 
-// Re-export the default reducer for convenience
-export { default } from './slices/luminaJsonSlice.js'
+export { selectAllSources } from './slices/selectors/selectAllSources.js'
+export { selectSourceByKey } from './slices/selectors/selectSourceByKey.js'
+export { selectSourcesByProvider } from './slices/selectors/selectSourcesByProvider.js'
+export { selectAllBlocks } from './slices/selectors/selectAllBlocks.js'
+export { selectBlocksFromSource } from './slices/selectors/selectBlocksFromSource.js'
+export { selectBlockById } from './slices/selectors/selectBlockById.js'
+export { selectLoading } from './slices/selectors/selectLoading.js'
+export { selectError } from './slices/selectors/selectError.js'
 
-// Export types
-export type {
-  GitProvider,
-  Block,
-  LuminaJson,
-  LuminaJsonSource,
-  BlockStoreState,
-  AddLuminaJsonParams,
-} from './types.js'
+export { default } from './slices/luminaJsonReducer.js'
 
-// Export utilities
-export { generateSourceKey, parseSourceKey } from './utils/sourceKey.js'
+export type { GitProvider } from './types/GitProvider.js'
+export type { Block } from './types/Block.js'
+export type { LuminaJson } from './types/LuminaJson.js'
+export type { LuminaJsonSource } from './types/LuminaJsonSource.js'
+export type { BlockStoreState } from './types/BlockStoreState.js'
+export type { AddLuminaJsonParams } from './types/AddLuminaJsonParams.js'
 
-// Export services (for advanced use cases)
+export { generateSourceKey } from './utils/generateSourceKey.js'
+export { parseSourceKey } from './utils/parseSourceKey.js'
+
 export { fetchLuminaJsonFromGitHub } from './services/githubService.js'
 export { fetchLuminaJsonFromGitLab } from './services/gitlabService.js'

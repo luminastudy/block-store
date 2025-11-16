@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import { generateSourceKey, parseSourceKey } from './sourceKey.js'
+import { generateSourceKey } from '../utils/generateSourceKey.js'
+import { parseSourceKey } from '../utils/parseSourceKey.js'
 
 describe('sourceKey utilities', () => {
   describe('generateSourceKey', () => {
