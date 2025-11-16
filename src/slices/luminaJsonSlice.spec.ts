@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { configureStore } from '@reduxjs/toolkit'
+import type { BlockStoreState, LuminaJsonSource } from '../types.js'
 import luminaJsonReducer, {
   removeLuminaJson,
   clearSources,
@@ -13,7 +14,6 @@ import luminaJsonReducer, {
   selectLoading,
   selectError,
 } from './luminaJsonSlice.js'
-import type { BlockStoreState, LuminaJsonSource } from '../types.js'
 
 describe('luminaJsonSlice', () => {
   let store: ReturnType<typeof configureStore>

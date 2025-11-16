@@ -32,41 +32,84 @@ export async function fetchLuminaJsonFromGitHub(
 
     const defaultBranch = repoData.default_branch
 
-    // Fetch lumina.json from the root of the repository
-    const { data } = await octokit.repos.getContent({
-      owner: organization,
-      repo: repository,
-      path: 'lumina.json',
-      ref: defaultBranch,
-    })
+    // Try fetching lumina.json first, then fall back to lumin.json
+    const filenames = ['lumina.json', 'lumin.json']
+    let data
+    let filename
+
+    for (const tryFilename of filenames) {
+      try {
+        const response = await octokit.repos.getContent({
+          owner: organization,
+          repo: repository,
+          path: tryFilename,
+          ref: defaultBranch,
+        })
+        data = response.data
+        filename = tryFilename
+        break
+      } catch (error) {
+        // If it's a 404, try the next filename
+        if ((error as { status?: number }).status === 404) {
+          continue
+        }
+        // If it's another error, throw it
+        throw error
+      }
+    }
+
+    // If we didn't find any file, throw an error
+    if (!data || !filename) {
+      throw new Error('Neither lumina.json nor lumin.json found in repository')
+    }
 
     // Ensure we got a file, not a directory
     if (Array.isArray(data) || data.type !== 'file') {
-      throw new Error('lumina.json is not a file')
+      throw new Error(`${filename} is not a file`)
     }
 
     // Get the latest commit SHA for this file
     const { data: commits } = await octokit.repos.listCommits({
       owner: organization,
       repo: repository,
-      path: 'lumina.json',
+      path: filename,
       per_page: 1,
     })
 
     if (commits.length === 0) {
-      throw new Error('No commits found for lumina.json')
+      throw new Error(`No commits found for ${filename}`)
     }
 
     const commitSha = commits[0].sha
 
-    // Decode the base64 content
-    const content = Buffer.from(data.content, 'base64').toString('utf-8')
-    const luminaJson = JSON.parse(content) as LuminaJson
+    // Decode the base64 content (browser-compatible)
+    const content = decodeURIComponent(
+      atob(data.content)
+        .split('')
+        .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    )
+    const parsedContent = JSON.parse(content)
 
-    // Validate that it has the blocks array
-    if (!luminaJson.blocks || !Array.isArray(luminaJson.blocks)) {
+    // Handle both formats:
+    // 1. Object with blocks property: { blocks: [...] }
+    // 2. Array at root level: [...]
+    let luminaJson: LuminaJson
+
+    if (Array.isArray(parsedContent)) {
+      // If it's a plain array, wrap it as { blocks: array }
+      luminaJson = { blocks: parsedContent }
+    } else if (parsedContent && typeof parsedContent === 'object') {
+      // If it's an object, ensure it has a blocks array
+      if (!parsedContent.blocks || !Array.isArray(parsedContent.blocks)) {
+        throw new Error(
+          `Invalid ${filename} format: missing or invalid blocks array`
+        )
+      }
+      luminaJson = parsedContent as LuminaJson
+    } else {
       throw new Error(
-        'Invalid lumina.json format: missing or invalid blocks array'
+        `Invalid ${filename} format: expected object or array, got ${typeof parsedContent}`
       )
     }
 

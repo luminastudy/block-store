@@ -9,7 +9,7 @@
 export { createBlockStore } from './store.js'
 export type { BlockStore, RootState, AppDispatch } from './store.js'
 
-// Export slice actions and selectors
+// Export slice actions, selectors, and reducer
 export {
   addLuminaJson,
   removeLuminaJson,
@@ -23,7 +23,11 @@ export {
   selectBlockById,
   selectLoading,
   selectError,
+  default as luminaJsonReducer,
 } from './slices/luminaJsonSlice.js'
+
+// Re-export the default reducer for convenience
+export { default } from './slices/luminaJsonSlice.js'
 
 // Export types
 export type {
