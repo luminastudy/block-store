@@ -1,15 +1,20 @@
 # @lumina-study/block-store
 
-A Redux Toolkit store for managing `lumina.json` configurations from GitHub and GitLab repositories.
+A Redux Toolkit store for managing `lumina.json` files from GitHub and GitLab repositories. Block types are defined by [`@lumina-study/block-schema`](https://www.npmjs.com/package/@lumina-study/block-schema) (single source of truth).
 
 ## Features
 
 - 🔄 **Redux Toolkit Integration**: Modern Redux state management with built-in best practices
-- 🌐 **Multi-Provider Support**: Fetch configurations from GitHub and GitLab repositories
+- 📋 **Block Schema Compliance**: Uses `@lumina-study/block-schema` as the single source of truth for block types
+- 🌐 **Multi-Provider Support**: Fetch lumina.json files from GitHub and GitLab repositories
 - 📦 **TypeScript First**: Full TypeScript support with comprehensive type definitions
-- 🔍 **Commit Tracking**: Automatically tracks the commit SHA for each configuration
-- ✨ **Simple API**: Easy-to-use actions and selectors for managing configurations
-- 🧪 **Well Tested**: Comprehensive test coverage with Vitest
+- 🔍 **Commit Tracking**: Automatically tracks the commit SHA for each lumina.json source
+- ✨ **Simple API**: Easy-to-use actions and selectors for managing sources and accessing blocks
+- 🧪 **Well Tested**: 24 tests passing with comprehensive coverage
+
+## What is lumina.json?
+
+A `lumina.json` file contains an array of blocks following the [`@lumina-study/block-schema`](https://www.npmjs.com/package/@lumina-study/block-schema) specification. This package manages the retrieval and storage of these files from Git repositories.
 
 ## Installation
 
@@ -31,14 +36,14 @@ import { createBlockStore } from '@lumina-study/block-store'
 const store = createBlockStore()
 ```
 
-### 2. Add a Block
+### 2. Add a lumina.json Source
 
 ```typescript
-import { addBlock } from '@lumina-study/block-store'
+import { addLuminaJson } from '@lumina-study/block-store'
 
 // Fetch from GitHub
-store.dispatch(
-  addBlock({
+await store.dispatch(
+  addLuminaJson({
     provider: 'github',
     organization: 'luminastudy',
     repository: 'my-project',
@@ -47,8 +52,8 @@ store.dispatch(
 )
 
 // Fetch from GitLab
-store.dispatch(
-  addBlock({
+await store.dispatch(
+  addLuminaJson({
     provider: 'gitlab',
     organization: 'my-group',
     repository: 'my-project',
@@ -57,25 +62,29 @@ store.dispatch(
 )
 ```
 
-### 3. Access Blocks
+### 3. Access Data
 
 ```typescript
 import {
+  selectAllSources,
   selectAllBlocks,
-  selectBlockByKey,
-  selectBlocksByProvider,
+  selectBlockById,
+  selectBlocksFromSource,
 } from '@lumina-study/block-store'
 
-// Get all blocks
+// Get all lumina.json sources
+const sources = selectAllSources(store.getState())
+
+// Get all blocks from all sources (flattened)
 const allBlocks = selectAllBlocks(store.getState())
 
-// Get specific block
-const block = selectBlockByKey('github:luminastudy:my-project')(
+// Get a specific block by ID across all sources
+const block = selectBlockById('block-uuid')(store.getState())
+
+// Get blocks from a specific source
+const sourceBlocks = selectBlocksFromSource('github:luminastudy:my-project')(
   store.getState()
 )
-
-// Get all GitHub blocks
-const githubBlocks = selectBlocksByProvider('github')(store.getState())
 ```
 
 ## API Reference
@@ -84,7 +93,7 @@ const githubBlocks = selectBlocksByProvider('github')(store.getState())
 
 #### `createBlockStore()`
 
-Creates and configures a Redux store for managing blocks.
+Creates and configures a Redux store for managing lumina.json sources.
 
 ```typescript
 import { createBlockStore } from '@lumina-study/block-store'
@@ -92,26 +101,32 @@ import { createBlockStore } from '@lumina-study/block-store'
 const store = createBlockStore()
 ```
 
+**Returns**: `BlockStore` - Configured Redux store
+
 ### Actions
 
-#### `addBlock(params: AddBlockParams)`
+#### `addLuminaJson(params: AddLuminaJsonParams)`
 
 Async thunk that fetches a `lumina.json` file from a Git provider and adds it to the store.
 
 **Parameters:**
 
-- `provider`: `'github'` or `'gitlab'`
-- `organization`: Organization or user name
-- `repository`: Repository name
-- `token?`: Optional authentication token for private repos
+```typescript
+interface AddLuminaJsonParams {
+  provider: 'github' | 'gitlab'
+  organization: string // Organization or user name
+  repository: string // Repository name
+  token?: string // Optional auth token for private repos
+}
+```
 
 **Example:**
 
 ```typescript
-import { addBlock } from '@lumina-study/block-store'
+import { addLuminaJson } from '@lumina-study/block-store'
 
 await store.dispatch(
-  addBlock({
+  addLuminaJson({
     provider: 'github',
     organization: 'luminastudy',
     repository: 'block-store',
@@ -119,26 +134,33 @@ await store.dispatch(
 )
 ```
 
-#### `removeBlock(key: string)`
+**Behavior:**
 
-Removes a block from the store by its key.
+- Fetches `lumina.json` from the repository root
+- Validates that the file contains a `blocks` array
+- Stores the source with provider, org, repo, commitSha, and content
+- Tracks when the source was added
+
+#### `removeLuminaJson(key: string)`
+
+Removes a lumina.json source from the store by its key.
 
 **Example:**
 
 ```typescript
-import { removeBlock } from '@lumina-study/block-store'
+import { removeLuminaJson } from '@lumina-study/block-store'
 
-store.dispatch(removeBlock('github:luminastudy:block-store'))
+store.dispatch(removeLuminaJson('github:luminastudy:block-store'))
 ```
 
-#### `clearBlocks()`
+#### `clearSources()`
 
-Clears all blocks from the store.
+Clears all lumina.json sources from the store.
 
 ```typescript
-import { clearBlocks } from '@lumina-study/block-store'
+import { clearSources } from '@lumina-study/block-store'
 
-store.dispatch(clearBlocks())
+store.dispatch(clearSources())
 ```
 
 #### `clearError()`
@@ -153,34 +175,104 @@ store.dispatch(clearError())
 
 ### Selectors
 
+#### `selectAllSources(state)`
+
+Returns all lumina.json sources as an array.
+
+```typescript
+import { selectAllSources } from '@lumina-study/block-store'
+
+const sources = selectAllSources(store.getState())
+// Returns: LuminaJsonSource[]
+```
+
+**Returns:**
+
+```typescript
+interface LuminaJsonSource {
+  provider: 'github' | 'gitlab'
+  organization: string
+  repository: string
+  commitSha: string
+  luminaJson: LuminaJson // Contains blocks array
+  addedAt: string // ISO timestamp
+}
+```
+
+#### `selectSourceByKey(key)(state)`
+
+Returns a specific source by its key.
+
+```typescript
+import { selectSourceByKey } from '@lumina-study/block-store'
+
+const source = selectSourceByKey('github:luminastudy:my-project')(
+  store.getState()
+)
+```
+
+**Key Format**: `"provider:organization:repository"`
+
+#### `selectSourcesByProvider(provider)(state)`
+
+Returns all sources for a specific Git provider.
+
+```typescript
+import { selectSourcesByProvider } from '@lumina-study/block-store'
+
+const githubSources = selectSourcesByProvider('github')(store.getState())
+const gitlabSources = selectSourcesByProvider('gitlab')(store.getState())
+```
+
 #### `selectAllBlocks(state)`
 
-Returns all blocks as an array.
+Returns all blocks from all sources (flattened).
 
 ```typescript
 import { selectAllBlocks } from '@lumina-study/block-store'
 
-const blocks = selectAllBlocks(store.getState())
+const allBlocks = selectAllBlocks(store.getState())
+// Returns: Block[]
 ```
 
-#### `selectBlockByKey(key)(state)`
-
-Returns a specific block by its key.
+**Returns:**
 
 ```typescript
-import { selectBlockByKey } from '@lumina-study/block-store'
-
-const block = selectBlockByKey('github:org:repo')(store.getState())
+interface Block {
+  id: string // UUID
+  title: {
+    he_text: string
+    en_text: string
+  }
+  prerequisites: string[] // Array of block IDs
+  parents: string[] // Array of block IDs
+  [key: string]: unknown // Additional properties
+}
 ```
 
-#### `selectBlocksByProvider(provider)(state)`
+#### `selectBlocksFromSource(sourceKey)(state)`
 
-Returns all blocks for a specific provider.
+Returns blocks from a specific source.
 
 ```typescript
-import { selectBlocksByProvider } from '@lumina-study/block-store'
+import { selectBlocksFromSource } from '@lumina-study/block-store'
 
-const githubBlocks = selectBlocksByProvider('github')(store.getState())
+const blocks = selectBlocksFromSource('github:luminastudy:my-project')(
+  store.getState()
+)
+```
+
+#### `selectBlockById(blockId)(state)`
+
+Finds a block by ID across all sources.
+
+```typescript
+import { selectBlockById } from '@lumina-study/block-store'
+
+const block = selectBlockById('550e8400-e29b-41d4-a716-446655440000')(
+  store.getState()
+)
+// Returns: Block | undefined
 ```
 
 #### `selectLoading(state)`
@@ -191,6 +283,7 @@ Returns the loading state.
 import { selectLoading } from '@lumina-study/block-store'
 
 const isLoading = selectLoading(store.getState())
+// Returns: boolean
 ```
 
 #### `selectError(state)`
@@ -201,18 +294,28 @@ Returns the current error message, if any.
 import { selectError } from '@lumina-study/block-store'
 
 const error = selectError(store.getState())
+// Returns: string | null
 ```
 
 ### Types
 
+All TypeScript types are exported for use in your application:
+
 ```typescript
 import type {
+  // Core types
   GitProvider,
-  LuminaConfig,
-  BlockData,
-  BlockIdentifier,
+  Block,
+  LuminaJson,
+  LuminaJsonSource,
+
+  // State types
   BlockStoreState,
-  AddBlockParams,
+
+  // Parameter types
+  AddLuminaJsonParams,
+
+  // Store types
   BlockStore,
   RootState,
   AppDispatch,
@@ -221,26 +324,43 @@ import type {
 
 ### Utilities
 
-#### `generateBlockKey(provider, organization, repository)`
+#### `generateSourceKey(provider, organization, repository)`
 
-Generates a unique key for a block in the format `provider:organization:repository`.
+Generates a unique key for a lumina.json source.
 
 ```typescript
-import { generateBlockKey } from '@lumina-study/block-store'
+import { generateSourceKey } from '@lumina-study/block-store'
 
-const key = generateBlockKey('github', 'luminastudy', 'block-store')
+const key = generateSourceKey('github', 'luminastudy', 'block-store')
 // Returns: "github:luminastudy:block-store"
 ```
 
-#### `parseBlockKey(key)`
+#### `parseSourceKey(key)`
 
-Parses a block key into its components.
+Parses a source key into its components.
 
 ```typescript
-import { parseBlockKey } from '@lumina-study/block-store'
+import { parseSourceKey } from '@lumina-study/block-store'
 
-const { provider, organization, repository } = parseBlockKey(
+const { provider, organization, repository } = parseSourceKey(
   'github:luminastudy:block-store'
+)
+```
+
+### Services (Advanced)
+
+For advanced use cases, you can access the underlying services directly:
+
+```typescript
+import {
+  fetchLuminaJsonFromGitHub,
+  fetchLuminaJsonFromGitLab,
+} from '@lumina-study/block-store'
+
+// Fetch directly without Redux
+const { luminaJson, commitSha } = await fetchLuminaJsonFromGitHub(
+  'luminastudy',
+  'my-project'
 )
 ```
 
@@ -250,8 +370,10 @@ const { provider, organization, repository } = parseBlockKey(
 import { Provider, useDispatch, useSelector } from 'react-redux'
 import {
   createBlockStore,
-  addBlock,
+  addLuminaJson,
+  selectAllSources,
   selectAllBlocks,
+  selectBlockById,
 } from '@lumina-study/block-store'
 import type { AppDispatch } from '@lumina-study/block-store'
 
@@ -260,18 +382,19 @@ const store = createBlockStore()
 function App() {
   return (
     <Provider store={store}>
-      <BlockManager />
+      <LuminaJsonManager />
     </Provider>
   )
 }
 
-function BlockManager() {
+function LuminaJsonManager() {
   const dispatch = useDispatch<AppDispatch>()
-  const blocks = useSelector(selectAllBlocks)
+  const sources = useSelector(selectAllSources)
+  const allBlocks = useSelector(selectAllBlocks)
 
-  const handleAddBlock = () => {
+  const handleAddSource = () => {
     dispatch(
-      addBlock({
+      addLuminaJson({
         provider: 'github',
         organization: 'luminastudy',
         repository: 'my-project',
@@ -281,11 +404,23 @@ function BlockManager() {
 
   return (
     <div>
-      <button onClick={handleAddBlock}>Add Block</button>
+      <button onClick={handleAddSource}>Add Source</button>
+
+      <h2>Sources ({sources.length})</h2>
       <ul>
-        {blocks.map(block => (
-          <li key={`${block.provider}:${block.organization}:${block.repository}`}>
-            {block.organization}/{block.repository} ({block.commitSha})
+        {sources.map(source => (
+          <li key={`${source.provider}:${source.organization}:${source.repository}`}>
+            {source.organization}/{source.repository}
+            ({source.luminaJson.blocks.length} blocks, SHA: {source.commitSha.substring(0, 7)})
+          </li>
+        ))}
+      </ul>
+
+      <h2>All Blocks ({allBlocks.length})</h2>
+      <ul>
+        {allBlocks.map(block => (
+          <li key={block.id}>
+            {block.title.en_text} / {block.title.he_text}
           </li>
         ))}
       </ul>
@@ -294,18 +429,56 @@ function BlockManager() {
 }
 ```
 
-## Block Data Structure
+## Data Structure
 
-Each block stored in the state has the following structure:
+### State Shape
 
 ```typescript
-interface BlockData {
-  provider: 'github' | 'gitlab'
-  organization: string
-  repository: string
-  commitSha: string
-  config: LuminaConfig // The parsed lumina.json content
-  addedAt: string // ISO timestamp
+{
+  luminaJson: {
+    sources: {
+      "github:luminastudy:my-project": {
+        provider: "github",
+        organization: "luminastudy",
+        repository: "my-project",
+        commitSha: "abc123...",
+        luminaJson: {
+          blocks: [
+            {
+              id: "550e8400-e29b-41d4-a716-446655440000",
+              title: {
+                he_text: "בלוק לדוגמה",
+                en_text: "Example Block"
+              },
+              prerequisites: [],
+              parents: []
+            }
+          ]
+        },
+        addedAt: "2024-01-01T00:00:00.000Z"
+      }
+    },
+    loading: false,
+    error: null
+  }
+}
+```
+
+### lumina.json File Format
+
+```json
+{
+  "blocks": [
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440000",
+      "title": {
+        "he_text": "בלוק לדוגמה",
+        "en_text": "Example Block"
+      },
+      "prerequisites": ["another-block-uuid"],
+      "parents": ["parent-block-uuid"]
+    }
+  ]
 }
 ```
 
@@ -314,7 +487,11 @@ interface BlockData {
 The store handles errors gracefully and stores them in the state:
 
 ```typescript
-import { selectError, selectLoading } from '@lumina-study/block-store'
+import {
+  selectError,
+  selectLoading,
+  clearError,
+} from '@lumina-study/block-store'
 
 const error = selectError(store.getState())
 const loading = selectLoading(store.getState())
@@ -323,8 +500,20 @@ if (loading) {
   console.log('Loading...')
 } else if (error) {
   console.error('Error:', error)
+  // Clear the error
+  store.dispatch(clearError())
 }
 ```
+
+## Block Schema
+
+Blocks follow the [`@lumina-study/block-schema`](https://www.npmjs.com/package/@lumina-study/block-schema) specification (v0.1):
+
+- **id**: Unique identifier (UUID format)
+- **title**: Object with `he_text` (Hebrew) and `en_text` (English)
+- **prerequisites**: Array of prerequisite block IDs (UUIDs)
+- **parents**: Array of parent block IDs (UUIDs)
+- Additional custom properties are allowed
 
 ## Development
 
@@ -355,6 +544,10 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md) for contribution guidelines.
 ## License
 
 MIT © Lumina Study
+
+## Related Packages
+
+- [`@lumina-study/block-schema`](https://www.npmjs.com/package/@lumina-study/block-schema) - JSON Schema for Lumina Study block objects (single source of truth)
 
 ## Support
 

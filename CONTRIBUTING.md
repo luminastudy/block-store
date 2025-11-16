@@ -188,22 +188,22 @@ When requesting features, please include:
 ```
 block-store/
 ├── src/
-│   ├── index.ts              # Main entry point
-│   ├── store.ts              # Redux store configuration
-│   ├── types.ts              # TypeScript type definitions
+│   ├── index.ts                   # Main entry point
+│   ├── store.ts                   # Redux store configuration
+│   ├── types.ts                   # TypeScript type definitions
 │   ├── slices/
-│   │   ├── blockSlice.ts     # Redux slice for blocks
-│   │   └── blockSlice.spec.ts
+│   │   ├── luminaJsonSlice.ts     # Redux slice for lumina.json sources
+│   │   └── luminaJsonSlice.spec.ts
 │   ├── services/
-│   │   ├── githubService.ts  # GitHub API integration
-│   │   └── gitlabService.ts  # GitLab API integration
+│   │   ├── githubService.ts       # GitHub API integration
+│   │   └── gitlabService.ts       # GitLab API integration
 │   └── utils/
-│       ├── blockKey.ts       # Utility functions
-│       └── blockKey.spec.ts
-├── dist/                     # Build output (gitignored)
+│       ├── sourceKey.ts           # Utility functions
+│       └── sourceKey.spec.ts
+├── dist/                          # Build output (gitignored)
 ├── .github/
 │   └── workflows/
-│       └── ci.yml            # CI/CD pipeline
+│       └── ci.yml                 # CI/CD pipeline
 └── package.json
 ```
 
@@ -215,13 +215,15 @@ The store uses Redux Toolkit with the following structure:
 
 ```typescript
 {
-  blocks: {
-    blocks: Record<string, BlockData>,  // Keyed by "provider:org:repo"
+  luminaJson: {
+    sources: Record<string, LuminaJsonSource>,  // Keyed by "provider:org:repo"
     loading: boolean,
     error: string | null
   }
 }
 ```
+
+Each `LuminaJsonSource` contains the lumina.json file data (with a `blocks` array following [@lumina-study/block-schema](https://www.npmjs.com/package/@lumina-study/block-schema)), along with provider metadata (organization, repository, commitSha, addedAt).
 
 ### Adding New Git Providers
 
@@ -229,8 +231,10 @@ To add support for a new Git provider:
 
 1. Update `GitProvider` type in `src/types.ts`
 2. Create a new service file in `src/services/` (e.g., `bitbucketService.ts`)
-3. Implement the fetch function following the same pattern as GitHub/GitLab services
-4. Update the `addBlock` thunk in `src/slices/blockSlice.ts` to handle the new provider
+3. Implement the fetch function following the same pattern as GitHub/GitLab services:
+   - Function should return `{ luminaJson: LuminaJson; commitSha: string }`
+   - Validate that the fetched file contains a `blocks` array
+4. Update the `addLuminaJson` thunk in `src/slices/luminaJsonSlice.ts` to handle the new provider
 5. Add tests for the new service
 6. Update documentation
 
