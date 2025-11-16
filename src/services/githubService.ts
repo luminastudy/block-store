@@ -1,9 +1,9 @@
 /**
- * GitHub API service for fetching lumina.json
+ * GitHub API service for fetching lumina.json files
  */
 
 import { Octokit } from '@octokit/rest'
-import type { LuminaConfig, GitProviderError } from '../types.js'
+import type { LuminaJson, GitProviderError } from '../types.js'
 
 /**
  * Fetches lumina.json from a GitHub repository
@@ -11,14 +11,14 @@ import type { LuminaConfig, GitProviderError } from '../types.js'
  * @param organization - GitHub organization or user name
  * @param repository - Repository name
  * @param token - Optional GitHub personal access token for private repos
- * @returns Object containing the config and commit SHA
+ * @returns Object containing the parsed lumina.json and commit SHA
  * @throws Error if the file doesn't exist or API call fails
  */
-export async function fetchLuminaConfigFromGitHub(
+export async function fetchLuminaJsonFromGitHub(
   organization: string,
   repository: string,
   token?: string
-): Promise<{ config: LuminaConfig; commitSha: string }> {
+): Promise<{ luminaJson: LuminaJson; commitSha: string }> {
   const octokit = new Octokit({
     auth: token,
   })
@@ -61,9 +61,16 @@ export async function fetchLuminaConfigFromGitHub(
 
     // Decode the base64 content
     const content = Buffer.from(data.content, 'base64').toString('utf-8')
-    const config = JSON.parse(content) as LuminaConfig
+    const luminaJson = JSON.parse(content) as LuminaJson
 
-    return { config, commitSha }
+    // Validate that it has the blocks array
+    if (!luminaJson.blocks || !Array.isArray(luminaJson.blocks)) {
+      throw new Error(
+        'Invalid lumina.json format: missing or invalid blocks array'
+      )
+    }
+
+    return { luminaJson, commitSha }
   } catch (error) {
     const gitError: GitProviderError = {
       message:

@@ -1,8 +1,8 @@
 /**
  * Main entry point for @lumina-study/block-store
  *
- * A Redux Toolkit store for managing lumina.json configurations
- * from GitHub and GitLab repositories.
+ * A Redux Toolkit store for managing lumina.json files from GitHub and GitLab repositories.
+ * Block types are defined by @lumina-study/block-schema (single source of truth).
  */
 
 // Export store factory and types
@@ -11,30 +11,33 @@ export type { BlockStore, RootState, AppDispatch } from './store.js'
 
 // Export slice actions and selectors
 export {
-  addBlock,
-  removeBlock,
-  clearBlocks,
+  addLuminaJson,
+  removeLuminaJson,
+  clearSources,
   clearError,
+  selectAllSources,
+  selectSourceByKey,
+  selectSourcesByProvider,
   selectAllBlocks,
-  selectBlockByKey,
-  selectBlocksByProvider,
+  selectBlocksFromSource,
+  selectBlockById,
   selectLoading,
   selectError,
-} from './slices/blockSlice.js'
+} from './slices/luminaJsonSlice.js'
 
 // Export types
 export type {
   GitProvider,
-  LuminaConfig,
-  BlockData,
-  BlockIdentifier,
+  Block,
+  LuminaJson,
+  LuminaJsonSource,
   BlockStoreState,
-  AddBlockParams,
+  AddLuminaJsonParams,
 } from './types.js'
 
 // Export utilities
-export { generateBlockKey, parseBlockKey } from './utils/blockKey.js'
+export { generateSourceKey, parseSourceKey } from './utils/sourceKey.js'
 
 // Export services (for advanced use cases)
-export { fetchLuminaConfigFromGitHub } from './services/githubService.js'
-export { fetchLuminaConfigFromGitLab } from './services/gitlabService.js'
+export { fetchLuminaJsonFromGitHub } from './services/githubService.js'
+export { fetchLuminaJsonFromGitLab } from './services/gitlabService.js'

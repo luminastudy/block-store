@@ -14,7 +14,8 @@
     "redux",
     "reduxjs",
     "commitlint",
-    "luminastudy"
+    "luminastudy",
+    "בלוק"
   ],
   "ignorePaths": [
     "node_modules",

@@ -1,27 +1,27 @@
 import { describe, it, expect } from 'vitest'
-import { generateBlockKey, parseBlockKey } from './blockKey.js'
+import { generateSourceKey, parseSourceKey } from './sourceKey.js'
 
-describe('blockKey utilities', () => {
-  describe('generateBlockKey', () => {
+describe('sourceKey utilities', () => {
+  describe('generateSourceKey', () => {
     it('should generate key for GitHub provider', () => {
-      const key = generateBlockKey('github', 'luminastudy', 'block-store')
+      const key = generateSourceKey('github', 'luminastudy', 'block-store')
       expect(key).toBe('github:luminastudy:block-store')
     })
 
     it('should generate key for GitLab provider', () => {
-      const key = generateBlockKey('gitlab', 'my-org', 'my-repo')
+      const key = generateSourceKey('gitlab', 'my-org', 'my-repo')
       expect(key).toBe('gitlab:my-org:my-repo')
     })
 
     it('should handle organization and repository with special characters', () => {
-      const key = generateBlockKey('github', 'org-name', 'repo_name')
+      const key = generateSourceKey('github', 'org-name', 'repo_name')
       expect(key).toBe('github:org-name:repo_name')
     })
   })
 
-  describe('parseBlockKey', () => {
-    it('should parse GitHub block key correctly', () => {
-      const result = parseBlockKey('github:luminastudy:block-store')
+  describe('parseSourceKey', () => {
+    it('should parse GitHub source key correctly', () => {
+      const result = parseSourceKey('github:luminastudy:block-store')
       expect(result).toEqual({
         provider: 'github',
         organization: 'luminastudy',
@@ -29,8 +29,8 @@ describe('blockKey utilities', () => {
       })
     })
 
-    it('should parse GitLab block key correctly', () => {
-      const result = parseBlockKey('gitlab:my-org:my-repo')
+    it('should parse GitLab source key correctly', () => {
+      const result = parseSourceKey('gitlab:my-org:my-repo')
       expect(result).toEqual({
         provider: 'gitlab',
         organization: 'my-org',
@@ -39,20 +39,20 @@ describe('blockKey utilities', () => {
     })
 
     it('should throw error for invalid key format', () => {
-      expect(() => parseBlockKey('invalid-key')).toThrow(
-        'Invalid block key format'
+      expect(() => parseSourceKey('invalid-key')).toThrow(
+        'Invalid source key format'
       )
-      expect(() => parseBlockKey('github:org')).toThrow(
-        'Invalid block key format'
+      expect(() => parseSourceKey('github:org')).toThrow(
+        'Invalid source key format'
       )
-      expect(() => parseBlockKey('github:org:repo:extra')).toThrow(
-        'Invalid block key format'
+      expect(() => parseSourceKey('github:org:repo:extra')).toThrow(
+        'Invalid source key format'
       )
     })
 
     it('should throw error for invalid provider', () => {
-      expect(() => parseBlockKey('bitbucket:org:repo')).toThrow(
-        'Invalid provider in block key'
+      expect(() => parseSourceKey('bitbucket:org:repo')).toThrow(
+        'Invalid provider in source key'
       )
     })
   })
@@ -65,12 +65,12 @@ describe('blockKey utilities', () => {
         repository: 'test-repo',
       }
 
-      const key = generateBlockKey(
+      const key = generateSourceKey(
         original.provider,
         original.organization,
         original.repository
       )
-      const parsed = parseBlockKey(key)
+      const parsed = parseSourceKey(key)
 
       expect(parsed).toEqual(original)
     })

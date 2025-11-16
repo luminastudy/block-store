@@ -57,6 +57,7 @@
   "packageManager": "pnpm@10.21.0",
   "dependencies": {
     "@gitbeaker/rest": "^43.8.0",
+    "@lumina-study/block-schema": "^1.0.0",
     "@octokit/rest": "^22.0.1",
     "@reduxjs/toolkit": "^2.10.1"
   },

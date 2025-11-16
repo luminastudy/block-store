@@ -1,5 +1,8 @@
 /**
  * Type definitions for block-store
+ *
+ * This package manages lumina.json files from Git repositories.
+ * Block types are defined by @lumina-study/block-schema (single source of truth).
  */
 
 /**
@@ -8,45 +11,63 @@
 export type GitProvider = 'github' | 'gitlab'
 
 /**
- * Configuration data from lumina.json
+ * Block object as defined by @lumina-study/block-schema v0.1
+ * This is the single source of truth for block structure.
  */
-export interface LuminaConfig {
+export interface Block {
+  /** Unique identifier for the block (UUID) */
+  id: string
+  /** Block title in Hebrew and English */
+  title: {
+    /** Hebrew text for the title */
+    he_text: string
+    /** English text for the title */
+    en_text: string
+  }
+  /** Array of prerequisite block IDs (UUIDs) */
+  prerequisites: string[]
+  /** Array of parent block IDs (UUIDs) */
+  parents: string[]
+  /** Additional properties allowed by schema */
   [key: string]: unknown
 }
 
 /**
- * Block data stored in the Redux store
+ * Structure of a lumina.json file
+ * Contains an array of blocks following the block-schema specification
  */
-export interface BlockData {
+export interface LuminaJson {
+  /** Array of blocks defined in this lumina.json */
+  blocks: Block[]
+  /** Optional metadata or additional fields */
+  [key: string]: unknown
+}
+
+/**
+ * Source information for a lumina.json file
+ * Tracks where the file came from and its content
+ */
+export interface LuminaJsonSource {
   /** Git provider (github or gitlab) */
   provider: GitProvider
   /** Organization or user name */
   organization: string
   /** Repository name */
   repository: string
-  /** Git commit SHA */
+  /** Git commit SHA when the file was fetched */
   commitSha: string
-  /** The lumina.json configuration data */
-  config: LuminaConfig
-  /** Timestamp when the block was added */
+  /** The parsed lumina.json content */
+  luminaJson: LuminaJson
+  /** Timestamp when the source was added */
   addedAt: string
-}
-
-/**
- * Unique identifier for a block
- */
-export interface BlockIdentifier {
-  provider: GitProvider
-  organization: string
-  repository: string
 }
 
 /**
  * Redux state shape
  */
 export interface BlockStoreState {
-  /** Map of blocks keyed by "provider:organization:repository" */
-  blocks: Record<string, BlockData>
+  /** Map of lumina.json sources keyed by "provider:organization:repository" */
+  sources: Record<string, LuminaJsonSource>
   /** Loading state */
   loading: boolean
   /** Error message if any */
@@ -54,9 +75,9 @@ export interface BlockStoreState {
 }
 
 /**
- * Parameters for adding a block
+ * Parameters for adding a lumina.json source
  */
-export interface AddBlockParams {
+export interface AddLuminaJsonParams {
   provider: GitProvider
   organization: string
   repository: string

@@ -10,7 +10,7 @@ export default [
       // Relax some overly strict rules for a publishable library
       'single-export/single-export': 'off', // Allow multiple exports from a file
       'ddd/require-spec-file': 'off', // Don't require spec files for every file
-      'max-lines': ['error', { max: 200 }], // Increase max lines from 100 to 200
+      'max-lines': ['error', { max: 250 }], // Increase max lines for Redux slices with selectors
       'error/no-generic-error': 'warn', // Allow generic Error for now
       'error/require-custom-error': 'warn', // Allow generic Error for now
       'no-restricted-syntax': 'off', // Allow type assertions
@@ -22,7 +22,7 @@ export default [
     // Test files can be longer
     files: ['**/*.spec.ts', '**/*.test.ts'],
     rules: {
-      'max-lines': ['error', { max: 300 }],
+      'max-lines': ['error', { max: 350 }],
     },
   },
 ]

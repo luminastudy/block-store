@@ -11,6 +11,9 @@ importers:
       '@gitbeaker/rest':
         specifier: ^43.8.0
         version: 43.8.0
+      '@lumina-study/block-schema':
+        specifier: ^1.0.0
+        version: 1.0.0
       '@octokit/rest':
         specifier: ^22.0.1
         version: 22.0.1
@@ -748,6 +751,9 @@ packages:
 
   '@jridgewell/trace-mapping@0.3.31':
     resolution: {integrity: sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw==}
+
+  '@lumina-study/block-schema@1.0.0':
+    resolution: {integrity: sha512-5mwR1cqKHoW1e95FaL3PYCXY4uqqDE7u0yLGMPwyCqe2viFgQTKjwSGb1fWNDgmDf2LqmCyXVGD79EcRbBU1dQ==}
 
   '@nodelib/fs.scandir@2.1.5':
     resolution: {integrity: sha512-vq24Bq3ym5HEQm2NKCr3yXDwjc7vTsEThRDnkp2DK9p1uqLR+DHurm/NOTo0KG7HYHU7eppKZj3MyqYuMBf62g==}
@@ -4034,6 +4040,8 @@ snapshots:
     dependencies:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.5
+
+  '@lumina-study/block-schema@1.0.0': {}
 
   '@nodelib/fs.scandir@2.1.5':
     dependencies:
