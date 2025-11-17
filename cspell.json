@@ -16,7 +16,10 @@
     "commitlint",
     "luminastudy",
     "בלוק",
-    "לדוגמה"
+    "לדוגמה",
+    "קומבינטוריקה",
+    "האוניברסיטה",
+    "הפתוחה"
   ],
   "ignorePaths": [
     "node_modules",

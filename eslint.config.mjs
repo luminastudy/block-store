@@ -3,6 +3,13 @@ import agentConfig from 'eslint-config-agent'
 export default [
   ...agentConfig,
   {
-    ignores: ['dist/**', 'node_modules/**', '*.config.js', '*.config.mjs', 'src/__tests__/**'],
+    ignores: [
+      'dist/**',
+      'node_modules/**',
+      '*.config.js',
+      '*.config.mjs',
+      'src/__tests__/**',
+      'examples/**',
+    ],
   },
 ]
