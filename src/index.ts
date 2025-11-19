@@ -35,5 +35,6 @@ export type { AddLuminaJsonParams } from './types/AddLuminaJsonParams.js'
 export { generateSourceKey } from './utils/generateSourceKey.js'
 export { parseSourceKey } from './utils/parseSourceKey.js'
 
-export { fetchLuminaJsonFromGitHub } from './services/githubService.js'
-export { fetchLuminaJsonFromGitLab } from './services/gitlabService.js'
+// Note: fetchLuminaJsonFromGitHub and fetchLuminaJsonFromGitLab are Node.js-only
+// and should be imported directly from './services/githubService.js' and './services/gitlabService.js'
+// when needed in Node.js environments

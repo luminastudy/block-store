@@ -1,6 +1,6 @@
 {
   "name": "@lumina-study/block-store",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Redux Toolkit store for managing lumina.json configurations from GitHub and GitLab repositories",
   "type": "module",
   "main": "./dist/index.js",
